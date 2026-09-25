@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, Enum, DateTime, ForeignKey, func
-from backend.app.database import Base
+from app.database import Base
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, func
 
 
 class Project(Base):
@@ -26,9 +26,7 @@ class Bug(Base):
     project_id = Column(Integer, ForeignKey("projects.id"))
     assignee_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(
-        DateTime, server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
 class Comment(Base):
