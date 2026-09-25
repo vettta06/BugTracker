@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+.env
+
+# Pytest
+.pytest_cache/
+.coverage
+
+# Linters
+.mypy_cache/
+.ruff_cache/
+.pylint_cache/
+
+# Docker & Postgres
+docker-compose.override.yml
+pg_data/
+
+# VS Code
+.vscode/
