@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DevBug Tracker</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>DevBug</h1>
+        <button id="openModalBtn" class="btn-primary">+ Новый баг</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <h2>Список ошибок</h2>
+      <div id="bugsList" class="bugs-grid">
+        <p class="loading">Загрузка...</p>
+      </div>
+    </main>
+
+    <div id="modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Создать новый баг</h2>
+        <form id="bugForm">
+          <label>Название:</label>
+          <input
+            type="text"
+            name="title"
+            required
+            placeholder="Например: Ошибка при логине"
+          />
+
+          <label>Описание:</label>
+          <textarea
+            name="description"
+            rows="3"
+            placeholder="Опишите проблему..."
+          ></textarea>
+
+          <div class="row">
+            <div>
+              <label>Приоритет:</label>
+              <select name="priority">
+                <option value="low">Низкий</option>
+                <option value="medium" selected>Средний</option>
+                <option value="high">Высокий</option>
+              </select>
+            </div>
+            <div>
+              <label>Проект (ID):</label>
+              <input type="number" name="project_id" value="1" required />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary">Создать</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
