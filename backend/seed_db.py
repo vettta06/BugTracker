@@ -1,5 +1,5 @@
 from app.database import session
-from app.models import User, Project, Bug
+from app.models import Bug, Project, User
 
 
 def seed_db():
@@ -12,14 +12,14 @@ def seed_db():
         users = [
             User(name="Alice Smith", email="alice@devbug.com"),
             User(name="Bob Jones", email="bob@devbug.com"),
-            User(name="Charlie Brown", email="charlie@devbug.com")
+            User(name="Charlie Brown", email="charlie@devbug.com"),
         ]
         db.add_all(users)
         db.flush()
 
         projects = [
             Project(name="Frontend App", description="Main client application"),
-            Project(name="Backend API", description="Core API services")
+            Project(name="Backend API", description="Core API services"),
         ]
         db.add_all(projects)
         db.flush()
@@ -31,7 +31,7 @@ def seed_db():
                 status="open",
                 priority="high",
                 project_id=projects[0].id,
-                assignee_id=users[0].id
+                assignee_id=users[0].id,
             ),
             Bug(
                 title="Slow API response",
@@ -39,8 +39,8 @@ def seed_db():
                 status="in_progress",
                 priority="medium",
                 project_id=projects[1].id,
-                assignee_id=users[1].id
-            )
+                assignee_id=users[1].id,
+            ),
         ]
         db.add_all(bugs)
         db.commit()

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,67 +8,102 @@
   </head>
   <body>
     <header>
-      <div class="container">
-        <h1>DevBug</h1>
-        <button id="openModalBtn" class="btn-primary">+ Новый баг</button>
+      <div class="container header-content">
+        <h1>DevBug Tracker</h1>
+        <button id="openModalBtn" class="btn-primary">+ New Bug</button>
       </div>
     </header>
 
     <main class="container">
-      <h2>Список ошибок</h2>
+      <div class="list-header">
+        <h2>Bug List</h2>
+        <span id="bugsCount" class="text-secondary">Loading...</span>
+      </div>
+
       <div id="bugsList" class="bugs-grid">
-        <p class="loading">Загрузка...</p>
+        <div class="loading-spinner"></div>
       </div>
     </main>
 
-    <div id="modal" class="modal">
+    <div
+      id="modal"
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modalTitle"
+    >
+      <div class="modal-overlay"></div>
       <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Создать новый баг</h2>
-        <form id="bugForm">
-          <label>Название:</label>
-          <input
-            type="text"
-            name="title"
-            required
-            placeholder="Например: Ошибка при логине"
-          />
+        <button class="close-btn" aria-label="Close modal">&times;</button>
+        <h2 id="modalTitle">Create New Bug</h2>
 
-          <label>Описание:</label>
-          <textarea
-            name="description"
-            rows="3"
-            placeholder="Опишите проблему..."
-          ></textarea>
+        <form id="bugForm">
+          <input type="hidden" name="bug_id" id="bugId" />
+
+          <div class="form-group">
+            <label for="bugTitle">Title</label>
+            <input
+              type="text"
+              id="bugTitle"
+              name="title"
+              required
+              placeholder="e.g., Login error"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="bugDescription">Description</label>
+            <textarea
+              id="bugDescription"
+              name="description"
+              rows="4"
+              placeholder="Describe reproduction steps..."
+            ></textarea>
+          </div>
 
           <div class="row">
-            <div>
-              <label>Приоритет:</label>
-              <select name="priority">
-                <option value="low">Низкий</option>
-                <option value="medium" selected>Средний</option>
-                <option value="high">Высокий</option>
+            <div class="form-group">
+              <label for="bugStatus">Status</label>
+              <select id="bugStatus" name="status">
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="closed">Closed</option>
               </select>
             </div>
-            <div>
-              <label>Проект:</label>
-              <select name="project_id" id="projectSelect" required>
-                <option value="">Загрузка...</option>
-              </select>
-            </div>
-            <div>
-              <label>Исполнитель:</label>
-              <select name="assignee_id" id="userSelect" required>
-                <option value="">Загрузка...</option>
+            <div class="form-group">
+              <label for="bugPriority">Priority</label>
+              <select id="bugPriority" name="priority">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
               </select>
             </div>
           </div>
 
-          <button type="submit" class="btn-primary">Создать</button>
+          <div class="row">
+            <div class="form-group">
+              <label for="projectSelect">Project</label>
+              <select name="project_id" id="projectSelect" required>
+                <option value="">Loading...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="userSelect">Assignee</label>
+              <select name="assignee_id" id="userSelect" required>
+                <option value="">Loading...</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" id="submitBtn" class="btn-primary">
+            <span class="btn-text">Save</span>
+            <span class="btn-loader" hidden></span>
+          </button>
         </form>
       </div>
     </div>
 
+    <div id="toastContainer" class="toast-container"></div>
     <script src="app.js"></script>
   </body>
 </html>
