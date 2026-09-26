@@ -6,22 +6,52 @@ const openModalBtn = document.getElementById("openModalBtn");
 const closeModalBtn = document.querySelector(".close");
 const bugForm = document.getElementById("bugForm");
 
-document.addEventListener("DOMContentLoaded", loadBugs);
+document.addEventListener("DOMContentLoaded", () => {
+  loadBugs();
+  loadProjects();
+  loadUsers();
+});
 
 async function loadBugs() {
   try {
     const response = await fetch(`${API_URL}/bugs/`);
-    if (!response.ok) throw new Error("Ошибка сети");
+    if (!response.ok) throw new Error("Network error");
     const bugs = await response.json();
     renderBugs(bugs);
   } catch (error) {
-    bugsList.innerHTML = `<p style="color: red;">Ошибка загрузки: ${error.message}. Убедитесь, что бэкенд запущен.</p>`;
+    bugsList.innerHTML = `<p style="color: red;">Ошибка: ${error.message}</p>`;
+  }
+}
+
+async function loadProjects() {
+  const select = document.getElementById("projectSelect");
+  try {
+    const response = await fetch(`${API_URL}/projects/`);
+    const projects = await response.json();
+    select.innerHTML = projects
+      .map((p) => `<option value="${p.id}">${p.name}</option>`)
+      .join("");
+  } catch (error) {
+    select.innerHTML = '<option value="">Ошибка загрузки</option>';
+  }
+}
+
+async function loadUsers() {
+  const select = document.getElementById("userSelect");
+  try {
+    const response = await fetch(`${API_URL}/users/`);
+    const users = await response.json();
+    select.innerHTML = users
+      .map((u) => `<option value="${u.id}">${u.name}</option>`)
+      .join("");
+  } catch (error) {
+    select.innerHTML = '<option value="">Ошибка загрузки</option>';
   }
 }
 
 function renderBugs(bugs) {
   if (bugs.length === 0) {
-    bugsList.innerHTML = "<p>Пока нет ни одного бага. Создайте первый!</p>";
+    bugsList.innerHTML = "<p>Баги не найдены.</p>";
     return;
   }
 
@@ -36,8 +66,7 @@ function renderBugs(bugs) {
             <p>${bug.description || "Нет описания"}</p>
             <div class="bug-meta">
                 Приоритет: <strong>${bug.priority}</strong> | 
-                Проект ID: ${bug.project_id} | 
-                Обновлен: ${new Date(bug.updated_at).toLocaleDateString()}
+                Обновлено: ${new Date(bug.updated_at).toLocaleDateString()}
             </div>
         </div>
     `,
@@ -55,7 +84,7 @@ bugForm.addEventListener("submit", async (e) => {
     priority: formData.get("priority"),
     status: "open",
     project_id: parseInt(formData.get("project_id")),
-    assignee_id: null,
+    assignee_id: parseInt(formData.get("assignee_id")),
   };
 
   try {
@@ -74,8 +103,7 @@ bugForm.addEventListener("submit", async (e) => {
       alert(`Ошибка: ${err.detail}`);
     }
   } catch (error) {
-    alert("Не удалось создать баг. Проверьте консоль.");
-    console.error(error);
+    alert("Не удалось создать баг.");
   }
 });
 

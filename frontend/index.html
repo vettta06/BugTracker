@@ -51,8 +51,16 @@
               </select>
             </div>
             <div>
-              <label>Проект (ID):</label>
-              <input type="number" name="project_id" value="1" required />
+              <label>Проект:</label>
+              <select name="project_id" id="projectSelect" required>
+                <option value="">Загрузка...</option>
+              </select>
+            </div>
+            <div>
+              <label>Исполнитель:</label>
+              <select name="assignee_id" id="userSelect" required>
+                <option value="">Загрузка...</option>
+              </select>
             </div>
           </div>
 
