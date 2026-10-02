@@ -29,12 +29,6 @@ python seed_db.py
 # 6. Запуск бэкенда
 uvicorn app.main:app --reload
 
-# 7. В другом терминале - запуск фронтенда
-cd ../frontend
-python -m http.server 3000
-
-# frontend
-http://localhost:3000
 # Документация api
 http://localhost:8000/docs
 ```
@@ -87,6 +81,7 @@ devbug/
 ├── frontend/
 │ ├── index.html
 │ ├── app.js
+│ ├── nginx.conf
 │ └── style.css
 ├── docker-compose.yml
 ├── .gitignore
