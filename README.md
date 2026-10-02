@@ -67,7 +67,7 @@ http://localhost
 ## Структура проекта
 
 ```
-chto_za_ujas/
+devbug/
 ├── backend/
 │ ├── app/
 │ │ ├── main.py # Точка входа FastAPI
