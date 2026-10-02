@@ -47,6 +47,9 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/devbug
 # 2. Сборка и запуск контейнеров
 docker compose up -d --build
 
+# prod-запуск
+docker compose -f docker-compose.yml up -d --build
+
 # 3. Применение миграций внутри контейнера
 docker compose exec backend alembic upgrade head
 
