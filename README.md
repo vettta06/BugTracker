@@ -17,8 +17,8 @@ pip install -r requirements.txt
 # 3. Создание .env
 POSTGRES_DB=devbug
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/devbug
+POSTGRES_PASSWORD=<password>
+DATABASE_URL=postgresql://postgres:<password>@localhost:5432/devbug
 
 # 4. Применение миграций
 alembic upgrade head
@@ -41,8 +41,8 @@ http://localhost:8000/docs
 # 1. Создание .env
 POSTGRES_DB=devbug
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/devbug
+POSTGRES_PASSWORD=<password>
+DATABASE_URL=postgresql://postgres:<password>@db:5432/devbug
 
 # 2. Сборка и запуск контейнеров
 docker compose up -d --build
@@ -57,6 +57,51 @@ docker compose exec backend alembic upgrade head
 docker compose exec backend python seed_db.py
 
 http://localhost
+```
+
+## Запуск в Kubernetes:
+
+Требования: Docker, minikube, kubectl
+
+```bash
+# 1. Запуск кластера
+minikube start --driver=docker --container-runtime=docker
+
+# 2. Сборка образов внутри minikube
+eval $(minikube docker-env)
+docker build -t devbug-backend:latest ./backend
+docker build -t devbug-frontend:latest ./frontend
+
+# 3. Применение манифестов
+
+# одной командой
+kubectl apply -k k8s/
+
+# по частям
+
+kubectl apply -f k8s/namespace.yml
+kubectl apply -f k8s/postgres-secret.yml
+kubectl apply -f k8s/postgres-pvc.yml
+kubectl apply -f k8s/postgres-deployment.yml
+kubectl apply -f k8s/postgres-service.yml
+
+# Миграции и seed — после готовности БД
+kubectl apply -f k8s/backend-migration-job.yml
+kubectl wait --for=condition=complete job/backend-migration -n devbug --timeout=120s
+kubectl apply -f k8s/backend-seed-job.yml
+kubectl wait --for=condition=complete job/backend-seed -n devbug --timeout=120s
+
+# Backend и Frontend
+kubectl apply -f k8s/backend-deployment.yml
+kubectl apply -f k8s/backend-service.yml
+kubectl apply -f k8s/frontend-deployment.yml
+kubectl apply -f k8s/frontend-service.yml
+
+# 4. Проверить работу
+kubectl get all -n devbug
+
+# 5. Открыть приложение
+minikube service frontend -n devbug
 ```
 
 Скрипт **seed_db.py** необходим для начальной инициализации базы данных. Он создает тестовых пользователей и проекты, так как текущая версия пользовательского интерфейса не содержит отдельных форм для их создания.
@@ -85,11 +130,26 @@ devbug/
 │ ├── index.html
 │ ├── app.js
 │ ├── nginx.conf
-│ └── style.css
+│ ├── style.css
+│ └── Dockerfile
+├── k8s/                         # Манифесты Kubernetes
+│   ├── kustomization.yml        # Сборка всех манифестов
+│   ├── namespace.yml            # Namespace devbug
+│   ├── postgres-secret.yml      # Secret с параметрами БД
+│   ├── postgres-pvc.yml         # PersistentVolumeClaim для данных БД
+│   ├── postgres-deployment.yml  # Deployment PostgreSQL
+│   ├── postgres-service.yml     # ClusterIP-сервис для БД
+│   ├── backend-migration-job.yml # Job для миграций Alembic
+│   ├── backend-seed-job.yml     # Job для seed_db.py
+│   ├── backend-deployment.yml   # Deployment backend-части
+│   ├── backend-service.yml      # ClusterIP-сервис для backend
+│   ├── frontend-deployment.yml  # Deployment frontend-части
+│   └── frontend-service.yml     # NodePort-сервис для frontend
 ├── docker-compose.yml
 ├── .gitignore
-├── 12facotors.md - файл с описанием соответствия приложения 12 факторам
+├── 12factors.md - файл с описанием соответствия приложения 12 факторам
+├── Report.md - файл с описанием манифестов и работы k8s
 └── .env
 ```
 
-Стек: FastAPI, HTML + JS + CSS, Alembic, Docker
+Стек: FastAPI, HTML + JS + CSS, Alembic, Docker, minikube
