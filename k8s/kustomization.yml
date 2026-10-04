@@ -7,8 +7,6 @@ resources:
   - postgres-pvc.yml
   - postgres-deployment.yml
   - postgres-service.yml
-  - backend-migration-job.yml
-  - backend-seed-job.yml
   - backend-deployment.yml
   - backend-service.yml
   - frontend-deployment.yml

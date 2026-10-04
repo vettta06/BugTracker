@@ -74,10 +74,14 @@ docker build -t devbug-frontend:latest ./frontend
 
 # 3. Применение манифестов
 
-# одной командой
+# Вариант 1 -  одной командой
 kubectl apply -k k8s/
 
-# по частям
+# отедельно запустить job
+kubectl apply -f k8s/backend-migration-job.yml
+kubectl apply -f k8s/backend-seed-job.yml
+
+# Вариант 2 - по частям
 
 kubectl apply -f k8s/namespace.yml
 kubectl apply -f k8s/postgres-secret.yml
