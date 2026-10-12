@@ -27,10 +27,3 @@ structlog.configure(
 )
 
 logger = structlog.get_logger(service="devbug-backend")
-
-
-def setup_uvicorn_logging():
-    for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
-        uvicorn_logger = logging.getLogger(logger_name)
-        uvicorn_logger.handlers = []
-        uvicorn_logger.propagate = True

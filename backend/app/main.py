@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from time import perf_counter
 
 import structlog
-from app.logger import logger, setup_uvicorn_logging
+from app.logger import logger
 from app.routers import bugs, comments, projects, users
 from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -49,7 +49,6 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    setup_uvicorn_logging()
     logger.info("application_started")
     yield
     logger.info("application_stopped")

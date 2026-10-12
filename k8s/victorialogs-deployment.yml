@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victorialogs
+  labels:
+    app: victorialogs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: victorialogs
+  template:
+    metadata:
+      labels:
+        app: victorialogs
+    spec:
+      containers:
+        - name: victorialogs
+          image: victoriametrics/victoria-logs:v1.52.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-storageDataPath=/victoria-logs-data"
+            - "-retentionPeriod=7d"
+          ports:
+            - containerPort: 9428
+              name: http
+          volumeMounts:
+            - name: data
+              mountPath: /victoria-logs-data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: victorialogs-pvc

@@ -11,3 +11,7 @@ resources:
   - backend-service.yml
   - frontend-deployment.yml
   - frontend-service.yml
+  - victorialogs-pvc.yml
+  - victorialogs-deployment.yml
+  - victorialogs-service.yml
+  - vector-rbac.yml
