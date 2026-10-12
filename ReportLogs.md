@@ -45,3 +45,28 @@ Lоставка логов настроена через DaemonSet. Выбор �
 ### 4. Агрегирующий запрос
 
 ![alt text](image-3.png)
+
+## Добавление Grafana
+
+Для визуализации логов была добавлена Grafana, которая подключается к Victoria Logs через официальный плагин `victoriametrics-logs-datasource` и позволяет строить дашборды на LogsQL-запросах.
+
+Grafana развёрнута через манифесты:
+
+| Файл                         | Назначение                                                                                   |
+| ---------------------------- | -------------------------------------------------------------------------------------------- |
+| `k8s/grafana-secret.yml`     | Secret с admin-паролем                                                                       |
+| `k8s/grafana-pvc.yml`        | PVC на 1 GB для хранения дашбордов и настроек                                                |
+| `k8s/grafana-deployment.yml` | Deployment Grafana 11.3.0. Устанавливает плагин `victoriametrics-logs-datasource` при старте |
+| `k8s/grafana-service.yml`    | NodePort-сервис для доступа из браузера                                                      |
+
+### Работающая Grafana
+
+![alt text](image-4.png)
+
+### Настройка источника данных
+
+![alt text](image-6.png)
+
+### Настроенные дашборды
+
+![alt text](image-7.png)

@@ -101,14 +101,41 @@ kubectl apply -f k8s/backend-service.yml
 kubectl apply -f k8s/frontend-deployment.yml
 kubectl apply -f k8s/frontend-service.yml
 
+# Observability: Victoria Logs + Vector + Grafana
+kubectl apply -f k8s/victorialogs-pvc.yml
+kubectl apply -f k8s/victorialogs-deployment.yml
+kubectl apply -f k8s/victorialogs-service.yml
+kubectl apply -f k8s/vector-rbac.yml
+kubectl apply -f k8s/vector-configmap.yml
+kubectl apply -f k8s/vector-daemonset.yml
+kubectl apply -f k8s/grafana-secret.yml
+kubectl apply -f k8s/grafana-pvc.yml
+kubectl apply -f k8s/grafana-deployment.yml
+kubectl apply -f k8s/grafana-service.yml
+
 # 4. Проверить работу
 kubectl get all -n devbug
 
 # 5. Открыть приложение
 minikube service frontend -n devbug
+
+# 6. Открыть Grafana
+minikube service grafana -n devbug
+
+# 7. Открыть vmui (Victoria Logs UI)
+kubectl port-forward -n devbug svc/victorialogs 9428:9428
 ```
 
 Скрипт **seed_db.py** необходим для начальной инициализации базы данных. Он создает тестовых пользователей и проекты, так как текущая версия пользовательского интерфейса не содержит отдельных форм для их создания.
+
+## Observability
+
+Для сбора, хранения и визуализации логов используется стек:
+
+- **Backend** пишет структурированные JSON-логи через `structlog`.
+- **Vector** (DaemonSet) собирает логи из `/var/log/pods/` и отправляет в Victoria Logs.
+- **Victoria Logs** хранит логи (retention 7 дней) и предоставляет UI `vmui` с LogsQL.
+- **Grafana** визуализирует логи через официальный плагин `victoriametrics-logs-datasource`.
 
 ## Структура проекта
 
@@ -136,19 +163,29 @@ devbug/
 │ ├── nginx.conf
 │ ├── style.css
 │ └── Dockerfile
-├── k8s/                         # Манифесты Kubernetes
-│   ├── kustomization.yml        # Сборка всех манифестов
-│   ├── namespace.yml            # Namespace devbug
-│   ├── postgres-secret.yml      # Secret с параметрами БД
-│   ├── postgres-pvc.yml         # PersistentVolumeClaim для данных БД
-│   ├── postgres-deployment.yml  # Deployment PostgreSQL
-│   ├── postgres-service.yml     # ClusterIP-сервис для БД
-│   ├── backend-migration-job.yml # Job для миграций Alembic
-│   ├── backend-seed-job.yml     # Job для seed_db.py
-│   ├── backend-deployment.yml   # Deployment backend-части
-│   ├── backend-service.yml      # ClusterIP-сервис для backend
-│   ├── frontend-deployment.yml  # Deployment frontend-части
-│   └── frontend-service.yml     # NodePort-сервис для frontend
+├── k8s/                              # Манифесты Kubernetes
+│   ├── kustomization.yml             # Сборка всех манифестов
+│   ├── namespace.yml                 # Namespace devbug
+│   ├── postgres-secret.yml           # Secret с параметрами БД
+│   ├── postgres-pvc.yml              # PVC для данных БД
+│   ├── postgres-deployment.yml       # Deployment PostgreSQL
+│   ├── postgres-service.yml          # ClusterIP-сервис для БД
+│   ├── backend-migration-job.yml     # Job для миграций Alembic
+│   ├── backend-seed-job.yml          # Job для seed_db.py
+│   ├── backend-deployment.yml        # Deployment backend-части
+│   ├── backend-service.yml           # ClusterIP-сервис для backend
+│   ├── frontend-deployment.yml       # Deployment frontend-части
+│   ├── frontend-service.yml          # NodePort-сервис для frontend
+│   ├── victorialogs-pvc.yml          # PVC для данных Victoria Logs
+│   ├── victorialogs-deployment.yml   # Deployment Victoria Logs
+│   ├── victorialogs-service.yml      # ClusterIP-сервис для Victoria Logs
+│   ├── vector-rbac.yml               # ServiceAccount, ClusterRole, ClusterRoleBinding для Vector
+│   ├── vector-configmap.yml          # ConfigMap с vector.toml
+│   ├── vector-daemonset.yml          # DaemonSet Vector для сбора логов
+│   ├── grafana-secret.yml            # Secret с admin-паролем Grafana
+│   ├── grafana-pvc.yml               # PVC для данных Grafana
+│   ├── grafana-deployment.yml        # Deployment Grafana + плагин VictoriaLogs
+│   └── grafana-service.yml           # NodePort-сервис для Grafana
 ├── docker-compose.yml
 ├── .gitignore
 ├── 12factors.md - файл с описанием соответствия приложения 12 факторам
@@ -156,4 +193,4 @@ devbug/
 └── .env
 ```
 
-Стек: FastAPI, HTML + JS + CSS, Alembic, Docker, minikube
+Стек: FastAPI, HTML + JS + CSS, Alembic, Docker, minikube, Victoria Logs, Vector, Grafana

@@ -17,3 +17,7 @@ resources:
   - vector-rbac.yml
   - vector-configmap.yml
   - vector-daemonset.yml
+  - grafana-secret.yml
+  - grafana-pvc.yml
+  - grafana-deployment.yml
+  - grafana-service.yml
