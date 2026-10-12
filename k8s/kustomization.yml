@@ -15,3 +15,5 @@ resources:
   - victorialogs-deployment.yml
   - victorialogs-service.yml
   - vector-rbac.yml
+  - vector-configmap.yml
+  - vector-daemonset.yml

@@ -10,7 +10,7 @@ metadata:
   name: vector
 rules:
   - apiGroups: [""]
-    resources: ["pods", "namespaces"]
+    resources: ["pods", "namespaces", "nodes"]
     verbs: ["get", "list", "watch"]
 
 ---
