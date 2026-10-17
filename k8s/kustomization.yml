@@ -3,6 +3,8 @@ kind: Kustomization
 namespace: devbug
 resources:
   - namespace.yml
+  - postgres-configmap.yml
+  - frontend-nginx-configmap.yml
   - postgres-secret.yml
   - postgres-pvc.yml
   - postgres-deployment.yml
