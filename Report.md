@@ -1,19 +1,20 @@
 # Использованные абстракции
 
-| Абстракция            | Имя в проекте       | Назначение                      |
-| --------------------- | ------------------- | ------------------------------- |
-| Namespace             | `devbug`            | Изоляция ресурсов приложения    |
-| Secret                | `postgres-secret`   | Хранение учётных данных БД      |
-| PersistentVolumeClaim | `postgres-pvc`      | Хранение данных PostgreSQL      |
-| Deployment            | `postgres`          | Под PostgreSQL                  |
-| Deployment            | `backend`           | Поды FastAPI-части              |
-| Deployment            | `frontend`          | Под Frontend-части              |
-| Service               | `db`                | Внутренний доступ к базе данных |
-| Service               | `backend`           | Внутренний доступ к backend     |
-| Service               | `frontend`          | Внешний доступ к приложению     |
-| Job                   | `backend-migration` | Применение миграций Alembic     |
-| Job                   | `backend-seed`      | Заполнение бд тестовыми данными |
-| Kustomization         | `k8s/`              | Сборка всех манифестов          |
+| Абстракция            | Имя в проекте           | Назначение                                                 |
+| --------------------- | ----------------------- | ---------------------------------------------------------- |
+| Namespace             | `devbug`                | Изоляция ресурсов приложения                               |
+| ConfigMap             | `postgres-config`       | Несекретные параметры БД: имя БД, пользователь, хост, порт |
+| ConfigMap             | `frontend-nginx-config` | Конфиг nginx для фронтенда                                 |
+| Secret                | `postgres-secret`       | Пароль PostgreSQL                                          |
+| PersistentVolumeClaim | `postgres-pvc`          | Хранение данных PostgreSQL                                 |
+| Deployment            | `postgres`              | Под PostgreSQL                                             |
+| Deployment            | `backend`               | Поды FastAPI-части                                         |
+| Deployment            | `frontend`              | Под Frontend-части                                         |
+| Service               | `db`                    | Внутренний доступ к базе данных                            |
+| Service               | `backend`               | Внутренний доступ к backend                                |
+| Service               | `frontend`              | Внешний доступ к приложению                                |
+| Job                   | `backend-init`          | Миграции (initContainer) + seed (основной контейнер)       |
+| Kustomization         | `k8s/`                  | Сборка всех манифестов                                     |
 
 # Взаимодействие между сервисами
 

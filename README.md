@@ -77,23 +77,22 @@ docker build -t devbug-frontend:latest ./frontend
 # Вариант 1 -  одной командой
 kubectl apply -k k8s/
 
-# отедельно запустить job
-kubectl apply -f k8s/backend-migration-job.yml
-kubectl apply -f k8s/backend-seed-job.yml
-
 # Вариант 2 - по частям
 
 kubectl apply -f k8s/namespace.yml
+
+# ConfigMaps
+kubectl apply -f k8s/postgres-configmap.yml
+kubectl apply -f k8s/frontend-nginx-configmap.yml
+
 kubectl apply -f k8s/postgres-secret.yml
 kubectl apply -f k8s/postgres-pvc.yml
 kubectl apply -f k8s/postgres-deployment.yml
 kubectl apply -f k8s/postgres-service.yml
 
 # Миграции и seed — после готовности БД
-kubectl apply -f k8s/backend-migration-job.yml
-kubectl wait --for=condition=complete job/backend-migration -n devbug --timeout=120s
-kubectl apply -f k8s/backend-seed-job.yml
-kubectl wait --for=condition=complete job/backend-seed -n devbug --timeout=120s
+kubectl apply -f k8s/backend-init-job.yml
+kubectl wait --for=condition=complete job/backend-init -n devbug --timeout=180s
 
 # Backend и Frontend
 kubectl apply -f k8s/backend-deployment.yml
@@ -166,12 +165,13 @@ devbug/
 ├── k8s/                              # Манифесты Kubernetes
 │   ├── kustomization.yml             # Сборка всех манифестов
 │   ├── namespace.yml                 # Namespace devbug
+│   ├── postgres-configmap.yml        # ConfigMap с несекретными параметрами БД
+│   ├── frontend-nginx-configmap.yml  # ConfigMap с nginx.conf
 │   ├── postgres-secret.yml           # Secret с параметрами БД
 │   ├── postgres-pvc.yml              # PVC для данных БД
 │   ├── postgres-deployment.yml       # Deployment PostgreSQL
 │   ├── postgres-service.yml          # ClusterIP-сервис для БД
-│   ├── backend-migration-job.yml     # Job для миграций Alembic
-│   ├── backend-seed-job.yml          # Job для seed_db.py
+│   ├── backend-init-job.yml          # Job: миграции + seed (initContainer'ы)
 │   ├── backend-deployment.yml        # Deployment backend-части
 │   ├── backend-service.yml           # ClusterIP-сервис для backend
 │   ├── frontend-deployment.yml       # Deployment frontend-части
