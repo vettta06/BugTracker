@@ -4,6 +4,7 @@ from app.models import Project
 from app.schemas import ProjectCreate, ProjectRead
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from app.metrics import PROJECTS_CREATED
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -19,6 +20,7 @@ def create_project(
     logger.info(
         "project_created", project_id=db_project.id, project_name=db_project.name
     )
+    PROJECTS_CREATED.inc()
     return db_project
 
 
