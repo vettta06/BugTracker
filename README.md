@@ -72,56 +72,30 @@ eval $(minikube docker-env)
 docker build -t devbug-backend:latest ./backend
 docker build -t devbug-frontend:latest ./frontend
 
-# 3. Применение манифестов
+# 3. Установка мониторинга
+helm repo add vm https://victoriametrics.github.io/helm-charts/
 
-# Вариант 1 -  одной командой
+helm repo update
+
+kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+
+helm install vm-single vm/victoria-metrics-single -n monitoring
+
+helm install vmagent vm/victoria-metrics-agent -n monitoring --set remoteWrite[0].url=http://vm-single-victoria-metrics-single-server.monitoring.svc.cluster.local:8428/api/v1/write
+
+# 4. Развёртывание приложения
 kubectl apply -k k8s/
 
-# Вариант 2 - по частям
-
-kubectl apply -f k8s/namespace.yml
-
-# ConfigMaps
-kubectl apply -f k8s/postgres-configmap.yml
-kubectl apply -f k8s/frontend-nginx-configmap.yml
-
-kubectl apply -f k8s/postgres-secret.yml
-kubectl apply -f k8s/postgres-pvc.yml
-kubectl apply -f k8s/postgres-deployment.yml
-kubectl apply -f k8s/postgres-service.yml
-
-# Миграции и seed — после готовности БД
-kubectl apply -f k8s/backend-init-job.yml
-kubectl wait --for=condition=complete job/backend-init -n devbug --timeout=180s
-
-# Backend и Frontend
-kubectl apply -f k8s/backend-deployment.yml
-kubectl apply -f k8s/backend-service.yml
-kubectl apply -f k8s/frontend-deployment.yml
-kubectl apply -f k8s/frontend-service.yml
-
-# Observability: Victoria Logs + Vector + Grafana
-kubectl apply -f k8s/victorialogs-pvc.yml
-kubectl apply -f k8s/victorialogs-deployment.yml
-kubectl apply -f k8s/victorialogs-service.yml
-kubectl apply -f k8s/vector-rbac.yml
-kubectl apply -f k8s/vector-configmap.yml
-kubectl apply -f k8s/vector-daemonset.yml
-kubectl apply -f k8s/grafana-secret.yml
-kubectl apply -f k8s/grafana-pvc.yml
-kubectl apply -f k8s/grafana-deployment.yml
-kubectl apply -f k8s/grafana-service.yml
-
-# 4. Проверить работу
+# 5. Проверка работы
 kubectl get all -n devbug
 
-# 5. Открыть приложение
+# 6. Открыть приложение
 minikube service frontend -n devbug
 
-# 6. Открыть Grafana
+# 7. Открыть Grafana
 minikube service grafana -n devbug
 
-# 7. Открыть vmui (Victoria Logs UI)
+# 8. Открыть VictoriaLogs
 kubectl port-forward -n devbug svc/victorialogs 9428:9428
 ```
 
@@ -129,12 +103,88 @@ kubectl port-forward -n devbug svc/victorialogs 9428:9428
 
 ## Observability
 
-Для сбора, хранения и визуализации логов используется стек:
+Для мониторинга приложения используются VictoriaMetrics Single и vmagent, развёрнутые в Kubernetes через Helm. Для сбора логов используются VictoriaLogs и Vector, а для визуализации — Grafana.
 
-- **Backend** пишет структурированные JSON-логи через `structlog`.
-- **Vector** (DaemonSet) собирает логи из `/var/log/pods/` и отправляет в Victoria Logs.
-- **Victoria Logs** хранит логи (retention 7 дней) и предоставляет UI `vmui` с LogsQL.
-- **Grafana** визуализирует логи через официальный плагин `victoriametrics-logs-datasource`.
+### Бизнес-метрики
+
+Приложение предоставляет следующие бизнес-метрики:
+
+- `devbug_bugs_created_total` — количество созданных багов.
+- `devbug_bugs_status_changed_total` — количество изменений статусов багов.
+- `devbug_bugs_assigned_total` — количество назначений исполнителей.
+- `devbug_projects_created_total` — количество созданных проектов.
+
+FastAPI также предоставляет метрики HTTP-запросов через эндпоинт `/metrics`. Метрики PostgreSQL собираются с помощью `postgres_exporter`.
+
+### Проверка состояния
+
+Проверить состояние приложения:
+
+```bash
+kubectl get pods -n devbug
+```
+
+Проверить состояние компонентов мониторинга:
+
+```bash
+kubectl get pods -n monitoring
+```
+
+### Просмотр метрик
+
+Для доступа к VictoriaMetrics выполните:
+
+```bash
+kubectl port-forward -n monitoring svc/vm-single-victoria-metrics-single-server 8428:8428
+```
+
+Откройте интерфейс VMUI:
+
+```bash
+http://localhost:8428/vmui/
+```
+
+В поле запроса укажите имя метрики, например:
+
+```bash
+devbug_bugs_assigned_total
+```
+
+Чтобы получить список имён всех доступных метрик, выполните в отдельном терминале:
+
+```bash
+curl -s 'http://localhost:8428/api/v1/label/__name__/values'
+```
+
+### Проверка сбора метрик
+
+Для доступа к странице целей сбора vmagent выполните в отдельном терминале:
+
+```bash
+kubectl port-forward -n monitoring deployment/vmagent-victoria-metrics-agent 8429:8429
+```
+
+Откройте страницу:
+
+```bash
+http://localhost:8429/targets
+```
+
+В разделе `kubernetes-pods` отображаются обнаруженные цели сбора.
+
+### Просмотр логов
+
+Для доступа к VictoriaLogs выполните:
+
+```bash
+kubectl port-forward -n devbug svc/victorialogs 9428:9428
+```
+
+После этого откройте:
+
+```bash
+http://localhost:9428/
+```
 
 ## Структура проекта
 
@@ -162,35 +212,36 @@ devbug/
 │ ├── nginx.conf
 │ ├── style.css
 │ └── Dockerfile
-├── k8s/                              # Манифесты Kubernetes
-│   ├── kustomization.yml             # Сборка всех манифестов
-│   ├── namespace.yml                 # Namespace devbug
-│   ├── postgres-configmap.yml        # ConfigMap с несекретными параметрами БД
-│   ├── frontend-nginx-configmap.yml  # ConfigMap с nginx.conf
-│   ├── postgres-secret.yml           # Secret с параметрами БД
-│   ├── postgres-pvc.yml              # PVC для данных БД
-│   ├── postgres-deployment.yml       # Deployment PostgreSQL
-│   ├── postgres-service.yml          # ClusterIP-сервис для БД
-│   ├── backend-init-job.yml          # Job: миграции + seed (initContainer'ы)
-│   ├── backend-deployment.yml        # Deployment backend-части
-│   ├── backend-service.yml           # ClusterIP-сервис для backend
-│   ├── frontend-deployment.yml       # Deployment frontend-части
-│   ├── frontend-service.yml          # NodePort-сервис для frontend
-│   ├── victorialogs-pvc.yml          # PVC для данных Victoria Logs
-│   ├── victorialogs-deployment.yml   # Deployment Victoria Logs
-│   ├── victorialogs-service.yml      # ClusterIP-сервис для Victoria Logs
-│   ├── vector-rbac.yml               # ServiceAccount, ClusterRole, ClusterRoleBinding для Vector
-│   ├── vector-configmap.yml          # ConfigMap с vector.toml
-│   ├── vector-daemonset.yml          # DaemonSet Vector для сбора логов
-│   ├── grafana-secret.yml            # Secret с admin-паролем Grafana
-│   ├── grafana-pvc.yml               # PVC для данных Grafana
-│   ├── grafana-deployment.yml        # Deployment Grafana + плагин VictoriaLogs
-│   └── grafana-service.yml           # NodePort-сервис для Grafana
+├── k8s/ # Манифесты Kubernetes
+│ ├── kustomization.yml # Сборка всех манифестов
+│ ├── namespace.yml # Namespace devbug
+│ ├── postgres-configmap.yml # ConfigMap с несекретными параметрами БД
+│ ├── frontend-nginx-configmap.yml # ConfigMap с nginx.conf
+│ ├── postgres-secret.yml # Secret с параметрами БД
+│ ├── postgres-pvc.yml # PVC для данных БД
+│ ├── postgres-deployment.yml # Deployment PostgreSQL
+│ ├── postgres-service.yml # ClusterIP-сервис для БД
+│ ├── backend-init-job.yml # Job: миграции + seed (initContainer'ы)
+│ ├── backend-deployment.yml # Deployment backend-части
+│ ├── backend-service.yml # ClusterIP-сервис для backend
+│ ├── frontend-deployment.yml # Deployment frontend-части
+│ ├── frontend-service.yml # NodePort-сервис для frontend
+│ ├── victorialogs-pvc.yml # PVC для данных Victoria Logs
+│ ├── victorialogs-deployment.yml # Deployment Victoria Logs
+│ ├── victorialogs-service.yml # ClusterIP-сервис для Victoria Logs
+│ ├── vector-rbac.yml # ServiceAccount, ClusterRole, ClusterRoleBinding для Vector
+│ ├── vector-configmap.yml # ConfigMap с vector.toml
+│ ├── vector-daemonset.yml # DaemonSet Vector для сбора логов
+│ ├── grafana-secret.yml # Secret с admin-паролем Grafana
+│ ├── grafana-pvc.yml # PVC для данных Grafana
+│ ├── grafana-deployment.yml # Deployment Grafana + плагин VictoriaLogs
+│ └── grafana-service.yml # NodePort-сервис для Grafana
 ├── docker-compose.yml
 ├── .gitignore
 ├── 12factors.md - файл с описанием соответствия приложения 12 факторам
 ├── Report.md - файл с описанием манифестов и работы k8s
 └── .env
+
 ```
 
-Стек: FastAPI, HTML + JS + CSS, Alembic, Docker, minikube, Victoria Logs, Vector, Grafana
+**Стек:** FastAPI, HTML, CSS, JavaScript, PostgreSQL, SQLAlchemy, Alembic, Docker, Kubernetes, Minikube, VictoriaMetrics, vmagent, postgres_exporter, VictoriaLogs, Vector, Grafana.
