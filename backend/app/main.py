@@ -7,6 +7,7 @@ from app.logger import logger
 from app.routers import bugs, comments, projects, users
 from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
@@ -66,3 +67,6 @@ app.include_router(users.router)
 @app.get("/")
 def root():
     return {"service": "DevBug", "status": "ok"}
+
+
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
