@@ -1,10 +1,10 @@
 from app.database import get_db
 from app.logger import logger
+from app.metrics import BUGS_ASSIGNED, BUGS_CREATED, BUGS_STATUS_CHANGED
 from app.models import Bug, Project, User
 from app.schemas import BugCreate, BugRead
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.metrics import BUGS_CREATED, BUGS_STATUS_CHANGED, BUGS_ASSIGNED
 
 router = APIRouter(prefix="/bugs", tags=["bugs"])
 
@@ -35,7 +35,7 @@ def create_bug(bug: BugCreate, db: Session = Depends(get_db)) -> BugRead:
     BUGS_CREATED.labels(priority=db_bug.priority).inc()
     if db_bug.assignee_id:
         BUGS_ASSIGNED.inc()
-        
+
     return db_bug
 
 
@@ -92,7 +92,9 @@ def update_bug(bug_id: int, bug: BugCreate, db: Session = Depends(get_db)) -> Bu
     logger.info("bug_updated", bug_id=db_bug.id)
 
     if old_status != db_bug.status:
-        BUGS_STATUS_CHANGED.labels(from_status=old_status, to_status=db_bug.status).inc()
+        BUGS_STATUS_CHANGED.labels(
+            from_status=old_status, to_status=db_bug.status
+        ).inc()
 
     if db_bug.assignee_id:
         BUGS_ASSIGNED.inc()

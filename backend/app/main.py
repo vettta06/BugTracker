@@ -6,8 +6,8 @@ import structlog
 from app.logger import logger
 from app.routers import bugs, comments, projects, users
 from fastapi import FastAPI, Request
-from starlette.middleware.base import BaseHTTPMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
+from starlette.middleware.base import BaseHTTPMiddleware
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):

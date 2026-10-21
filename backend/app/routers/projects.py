@@ -1,10 +1,10 @@
 from app.database import get_db
 from app.logger import logger
+from app.metrics import PROJECTS_CREATED
 from app.models import Project
 from app.schemas import ProjectCreate, ProjectRead
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.metrics import PROJECTS_CREATED
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
