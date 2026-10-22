@@ -14,4 +14,4 @@ BUGS_ASSIGNED = Counter(
     "devbug_bugs_assigned", "Total number of bugs assigned to users"
 )
 
-PROJECTS_CREATED = Counter("devbug_projects_created", "Total number f created projects")
+PROJECTS_CREATED = Counter("devbug_projects_created", "Total number of created projects")
