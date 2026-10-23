@@ -24,3 +24,5 @@ resources:
   - grafana-pvc.yml
   - grafana-deployment.yml
   - grafana-service.yml
+  - slo-rules-configmap.yml
+  - vmalert-deployment.yml

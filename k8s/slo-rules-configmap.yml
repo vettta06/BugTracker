@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slo-rules-config
+  namespace: devbug
+data:
+  slo-rules.yml: |
+    groups:
+      - name: devbug_slo
+        interval: 30s
+        rules:
+          # SLI-1:
+          - record: sli:http_availability:ratio_rate5m
+            expr: |
+              sum(rate(http_requests_total{namespace="devbug", pod=~"backend-.*", status!~"5.."}[5m]))
+              /
+              sum(rate(http_requests_total{namespace="devbug", pod=~"backend-.*"}[5m]))
+
+          # SLI-2:
+          - record: sli:http_latency_fast:ratio_rate5m
+            expr: |
+              sum(rate(http_request_duration_seconds_bucket{namespace="devbug", pod=~"backend-.*", le="0.5"}[5m]))
+              /
+              sum(rate(http_request_duration_seconds_count{namespace="devbug", pod=~"backend-.*"}[5m]))
+
+          # SLI-3:
+          - record: sli:backend_uptime:ratio_rate1m
+            expr: |
+              avg_over_time(up{namespace="devbug", pod=~"backend-.*"}[1m])
+
+          # SLO-1:
+          - record: slo:http_availability:ratio_30d
+            expr: |
+              sum(rate(http_requests_total{namespace="devbug", pod=~"backend-.*", status!~"5.."}[30d]))
+              /
+              sum(rate(http_requests_total{namespace="devbug", pod=~"backend-.*"}[30d]))
+
+          # Error Budget
+          - record: slo:http_availability:error_budget_remaining
+            expr: |
+              1 - (
+                (1 - slo:http_availability:ratio_30d)
+                /
+                (1 - 0.995)
+              )
