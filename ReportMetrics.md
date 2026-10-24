@@ -4,7 +4,7 @@
 
 В FastAPI метрики отдаются через библиотеку `prometheus-fastapi-instrumentator`, в PostgreSQL — через sidecar-контейнер `postgres-exporter`. Все собранные данные сохраняются в Victoria Metrics и визуализируются в vmui.
 
-![alt text](image-9.png)
+![alt text](docs/screenshots/image-9.png)
 Страница http://localhost:8429/targets показывает, что vmagent автоматически обнаружил все поды (backend и postgres) по аннотациям prometheus.io/scrape. Все таргеты в статусе UP.
 
 ## Реализованные бизнес-метрики
@@ -13,7 +13,7 @@
 
 Показывает, сколько багов заводится в системе и с какой критичностью. Это помогает понять нагрузку на команду и приоритеты в разработке.
 
-![alt text](image-11.png)
+![alt text](docs/screenshots/image-11.png)
 
 В UI VictoriaMetrics выполнен запрос devbug_projects_created_total. Во всплывающей подсказке можно посмотреть метки.
 
@@ -21,7 +21,7 @@
 
 Отражает движение багов по воронке (open -> in_progress -> closed). Позволяет увидеть, на каком этапе задачи «застревают» и как быстро команда закрывает баги.
 
-![alt text](image-8.png)
+![alt text](docs/screenshots/image-8.png)
 
 В vmui выполнен запрос devbug_bugs_status_changed_total. На графике видно изменение счётчика, а во всплывающей подсказке отображаются метки from_status="open" и to_status="in_progress".
 
@@ -29,7 +29,7 @@
 
 Показывает, сколько раз баги назначались на исполнителей. Помогает оценить распределение нагрузки и понять, не висят ли задачи без ответственного.
 
-![alt text](image-10.png)
+![alt text](docs/screenshots/image-10.png)
 
 В vmui выполнен запрос devbug_bugs_assigned_total. График отображает рост счётчика при назначении багов на исполнителей.
 
@@ -37,7 +37,7 @@
 
 Показывает рост числа проектов в системе. Это индикатор масштабирования использования продукта и активности пользователей.
 
-![alt text](image-12.png)
+![alt text](docs/screenshots/image-12.png)
 
 В vmui выполнен запрос devbug_projects_created_total.
 

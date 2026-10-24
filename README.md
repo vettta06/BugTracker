@@ -186,9 +186,39 @@ kubectl port-forward -n devbug svc/victorialogs 9428:9428
 http://localhost:9428/
 ```
 
+### SLI/SLO метрики (пробер)
+
+Для расчёта SLI и SLO реализован пробер на базе `vmalert`.
+Правила вычисления (recording rules) хранятся в `k8s/monitoring/slo-rules-configmap.yml`.
+`vmalert` читает сырые метрики из VictoriaMetrics и записывает вычисленные значения
+обратно под именами `sli:*` и `slo:*`.
+
+Доступные метрики:
+
+- `sli:http_availability:ratio_rate5m` — доступность (RBSLO)
+- `sli:http_latency_fast:ratio_rate5m` — latency (RBSLO)
+- `sli:backend_uptime:ratio_rate1m` — uptime (TBSLO)
+- `slo:http_availability:ratio_30d` — доступность за 30 дней
+- `slo:http_availability:error_budget_remaining` — остаток бюджета ошибок
+
+### Дашборд SLO в Grafana
+
+После запуска Grafana в ней автоматически (через provisioning) создаётся дашборд
+**DevBug SLO**. Он отображает:
+
+- 3 графика SLI (Availability, Latency, Uptime) с порогами SLO.
+- Error Budget Remaining (спидометр).
+- Метрики PostgreSQL и бизнес-метрики.
+
+Для доступа к Grafana выполните:
+
+```bash
+minikube service grafana -n devbug
+
 ## Структура проекта
 
 ```
+
 devbug/
 ├── backend/
 │ ├── app/
@@ -215,33 +245,45 @@ devbug/
 ├── k8s/ # Манифесты Kubernetes
 │ ├── kustomization.yml # Сборка всех манифестов
 │ ├── namespace.yml # Namespace devbug
-│ ├── postgres-configmap.yml # ConfigMap с несекретными параметрами БД
-│ ├── frontend-nginx-configmap.yml # ConfigMap с nginx.conf
-│ ├── postgres-secret.yml # Secret с параметрами БД
-│ ├── postgres-pvc.yml # PVC для данных БД
-│ ├── postgres-deployment.yml # Deployment PostgreSQL
-│ ├── postgres-service.yml # ClusterIP-сервис для БД
-│ ├── backend-init-job.yml # Job: миграции + seed (initContainer'ы)
-│ ├── backend-deployment.yml # Deployment backend-части
-│ ├── backend-service.yml # ClusterIP-сервис для backend
-│ ├── frontend-deployment.yml # Deployment frontend-части
-│ ├── frontend-service.yml # NodePort-сервис для frontend
-│ ├── victorialogs-pvc.yml # PVC для данных Victoria Logs
-│ ├── victorialogs-deployment.yml # Deployment Victoria Logs
-│ ├── victorialogs-service.yml # ClusterIP-сервис для Victoria Logs
-│ ├── vector-rbac.yml # ServiceAccount, ClusterRole, ClusterRoleBinding для Vector
-│ ├── vector-configmap.yml # ConfigMap с vector.toml
-│ ├── vector-daemonset.yml # DaemonSet Vector для сбора логов
+│ ├── app/ # Манифесты приложения
+│ │ ├── postgres-configmap.yml # ConfigMap с несекретными параметрами БД
+│ │ ├── frontend-nginx-configmap.yml # ConfigMap с nginx.conf
+│ │ ├── postgres-secret.yml # Secret с параметрами БД
+│ │ ├── postgres-pvc.yml # PVC для данных БД
+│ │ ├── postgres-deployment.yml # Deployment PostgreSQL
+│ │ ├── postgres-service.yml # ClusterIP-сервис для БД
+│ │ ├── backend-init-job.yml # Job: миграции + seed (initContainer'ы)
+│ │ ├── backend-deployment.yml # Deployment backend-части
+│ │ ├── backend-service.yml # ClusterIP-сервис для backend
+│ │ ├── frontend-deployment.yml # Deployment frontend-части
+│ │ └── frontend-service.yml # NodePort-сервис для frontend
+│ ├── monitoring/ # Манифесты мониторинга
+│ │ ├── victorialogs-pvc.yml # PVC для данных Victoria Logs
+│ │ ├── victorialogs-deployment.yml # Deployment Victoria Logs
+│ │ ├── victorialogs-service.yml # ClusterIP-сервис для Victoria Logs
+│ │ ├── vector-rbac.yml # ServiceAccount, ClusterRole, ClusterRoleBinding для Vector
+│ │ ├── vector-configmap.yml # ConfigMap с vector.toml
+│ │ ├── vector-daemonset.yml # DaemonSet Vector для сбора логов
+│ │ ├── slo-rules-configmap.yml # ConfigMap с PromQL-правилами (recording rules)
+│ │ └── vmalert-deployment.yml # Deployment vmalert (пробер для SLI/SLO)
+│ └── grafana/ # Манифесты Grafana
 │ ├── grafana-secret.yml # Secret с admin-паролем Grafana
 │ ├── grafana-pvc.yml # PVC для данных Grafana
+│ ├── grafana-datasource.yml # ConfigMap с настройками источника данных (VictoriaMetrics)
+│ ├── grafana-dashboard-provider.yml # ConfigMap с провайдером дашбордов
+│ ├── grafana-dashboard-slo.yml # ConfigMap с JSON-дашбордом DevBug SLO
 │ ├── grafana-deployment.yml # Deployment Grafana + плагин VictoriaLogs
 │ └── grafana-service.yml # NodePort-сервис для Grafana
 ├── docker-compose.yml
 ├── .gitignore
 ├── 12factors.md - файл с описанием соответствия приложения 12 факторам
 ├── Report.md - файл с описанием манифестов и работы k8s
+├── ReportLogs.md - файл с описанием логов проекта
+├── ReportMetrics.md - файл с описанием метрик проекта
+├── ReportSLI.md - файл с описанием SLI/SLA/SLO
 └── .env
 
 ```
 
 **Стек:** FastAPI, HTML, CSS, JavaScript, PostgreSQL, SQLAlchemy, Alembic, Docker, Kubernetes, Minikube, VictoriaMetrics, vmagent, postgres_exporter, VictoriaLogs, Vector, Grafana.
+```

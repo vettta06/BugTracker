@@ -32,19 +32,19 @@ Lоставка логов настроена через DaemonSet. Выбор �
 
 ### 1. Получение сырых записей за последние 30 минут
 
-![alt text](image.png)
+![alt text](docs/screenshots/image.png)
 
 ### 2. Фильтр по полю request_finished
 
-![alt text](image-1.png)
+![alt text](docs/screenshots/image-1.png)
 
 ### 3. Запрос с группировкой по уровню
 
-![alt text](image-2.png)
+![alt text](docs/screenshots/image-2.png)
 
 ### 4. Агрегирующий запрос
 
-![alt text](image-3.png)
+![alt text](docs/screenshots/image-3.png)
 
 ## Добавление Grafana
 
@@ -61,12 +61,12 @@ Grafana развёрнута через манифесты:
 
 ### Работающая Grafana
 
-![alt text](image-4.png)
+![alt text](docs/screenshots/image-4.png)
 
 ### Настройка источника данных
 
-![alt text](image-6.png)
+![alt text](docs/screenshots/image-6.png)
 
 ### Настроенные дашборды
 
-![alt text](image-7.png)
+![alt text](docs/screenshots/image-7.png)

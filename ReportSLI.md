@@ -143,16 +143,11 @@ avg_over_time(pg_up{namespace="devbug"}[1m])
 | SLA-2 | 98% запросов быстрее 500ms      | −1.0% от SLO-2 (99%)   |
 | SLA-3 | Uptime ≥ 99.5% в месяц          | −0.4% от SLO-3 (99.9%) |
 
-**Общий SLA:**
-
-> DevBug обязуется обеспечивать доступность API не ниже 99.0% в месяц, 98% запросов
-> быстрее 500ms и uptime не ниже 99.5% в месяц.
-
 ---
 
 ## 5. Реализация пробера
 
-Реализация: recording rules в VictoriaMetrics (`k8s/slo-recording-rules.yml`).
+Реализация: recording rules в VictoriaMetrics (`k8s/monitoring/slo-rules-configmap.yml`).
 
 Список правил:
 
@@ -166,8 +161,8 @@ avg_over_time(pg_up{namespace="devbug"}[1m])
 
 ## 6. Визуализация (Grafana)
 
-Datasource VictoriaMetrics (provisioning) + SLO dashboard
-(`k8s/grafana-datasource-configmap.yml`, `k8s/grafana-dashboard-slo-configmap.yml`).
+Datasource VictoriaMetrics + SLO dashboard
+(`k8s/grafana/grafana-datasource.yml`, `k8s/grafana/grafana-datasource.yml`).
 
 Панели:
 
@@ -179,3 +174,51 @@ Datasource VictoriaMetrics (provisioning) + SLO dashboard
 6. Supporting: `pg_up`, `devbug_*`.
 
 ---
+
+## 7. Пример работы
+
+---
+
+## 7. Демонстрация работы SLI/SLO
+
+Для демонстрации того, что метрики реально реагируют на изменение поведения приложения, был использован управляемый сбой на уровне Kubernetes.
+
+### Сценарий демонстрации
+
+**1. Генерация трафика**
+
+Запускается цикл HTTP-запросов к API, имитирующий активность пользователей:
+
+```bash
+while true; do curl -s http://localhost:8000/ > /dev/null; sleep 0.5; done
+```
+
+![alt text](docs/screenshots/image13.png)
+
+**2. Внесение сбоя**
+
+Принудительная остановка бэкенда, базы данных
+
+```bash
+kubectl scale deployment backend -n devbug --replicas=0
+kubectl scale deployment postgres -n devbug --replicas=0
+```
+
+**3. Наблюдение за графиками**
+
+В течение 1–2 минут в Grafana фиксируются изменения индикаторов:
+
+![alt text](docs/screenshots/image14.png)
+
+**4. Восстановление**
+
+Деплоймент возвращается в исходное состояние:
+
+```bash
+kubectl scale deployment backend -n devbug --replicas=3
+kubectl scale deployment postgres -n devbug --replicas=1
+```
+
+**5. Проверка восстановления**
+
+Kubernetes автоматически пересоздает поды. Графики в Grafana возвращаются в зеленую зону, демонстрируя, что сервис снова доступен, а SLO выполняются.
