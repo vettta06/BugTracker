@@ -6,6 +6,7 @@ import structlog
 from app.logger import logger
 from app.routers import bugs, comments, projects, users
 from fastapi import FastAPI, Request
+from prometheus_client import start_http_server
 from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -50,9 +51,14 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    metrics_server, metrics_thread = start_http_server(8001)
     logger.info("application_started")
     yield
     logger.info("application_stopped")
+
+    metrics_server.shutdown()
+    metrics_server.server_close()
+    metrics_thread.join()
 
 
 app = FastAPI(title="DevBug API", lifespan=lifespan)
@@ -69,4 +75,4 @@ def root():
     return {"service": "DevBug", "status": "ok"}
 
 
-Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+Instrumentator().instrument(app)

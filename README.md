@@ -114,7 +114,7 @@ kubectl port-forward -n devbug svc/victorialogs 9428:9428
 - `devbug_bugs_assigned_total` — количество назначений исполнителей.
 - `devbug_projects_created_total` — количество созданных проектов.
 
-FastAPI также предоставляет метрики HTTP-запросов через эндпоинт `/metrics`. Метрики PostgreSQL собираются с помощью `postgres_exporter`.
+HTTP-метрики собираются с помощью prometheus-fastapi-instrumentator и публикуются через отдельный HTTP-сервер на порту 8001 по эндпоинту /metrics. API при этом продолжает работать на порту 8000. Сбор метрик с трёх реплик backend выполняется vmagent на основе Kubernetes-аннотаций. Метрики PostgreSQL собираются с помощью postgres_exporter.
 
 ### Проверка состояния
 
@@ -185,6 +185,28 @@ kubectl port-forward -n devbug svc/victorialogs 9428:9428
 ```bash
 http://localhost:9428/
 ```
+
+### Прямой доступ к метрикам backend
+
+Для проверки доступности метрик backend можно выполнить проброс порта `8001` из Kubernetes в локальное окружение:
+
+```bash
+kubectl port-forward -n devbug deployment/backend 8001:8001
+```
+
+После этого метрики доступны по адресу:
+
+```text
+http://localhost:8001/metrics
+```
+
+Для проверки через терминал:
+
+```bash
+curl http://localhost:8001/metrics
+```
+
+Проброс порта используется только для ручной проверки. В штатном режиме vmagent самостоятельно собирает метрики со всех реплик backend через порт `8001`.
 
 ### SLI/SLO метрики (пробер)
 
