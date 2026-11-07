@@ -20,3 +20,5 @@ pg_data/
 
 # VS Code
 .vscode/
+
+k8s/monitoring/alertmanager-secret.yml

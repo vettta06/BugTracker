@@ -29,3 +29,7 @@ resources:
   - grafana/grafana-datasource.yml
   - grafana/grafana-dashboard-provider.yml
   - grafana/grafana-dashboard-slo.yml
+  - monitoring/alertmanager-configmap.yml
+  - monitoring/alertmanager-secret.yml
+  - monitoring/alertmanager-deployment.yml
+  - monitoring/alertmanager-service.yml

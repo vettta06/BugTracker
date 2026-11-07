@@ -43,3 +43,84 @@ data:
                 /
                 (1 - 0.995)
               )
+      - name: devbug_service_alerts
+        interval: 30s
+        rules:
+          - alert: HighHTTPErrorRate
+            expr: |
+              (
+                sum(rate(http_requests_total{
+                  namespace="devbug",
+                  pod=~"backend-.*",
+                  status="5xx"
+                }[5m]))
+                /
+                sum(rate(http_requests_total{
+                  namespace="devbug",
+                  pod=~"backend-.*"
+                }[5m]))
+              ) > 0.05
+              and
+              sum(increase(http_requests_total{
+                namespace="devbug",
+                pod=~"backend-.*"
+              }[5m])) >= 5
+            for: 5m
+            labels:
+              severity: warning
+              category: service
+            annotations:
+              summary: "High http error rate"
+              description: "More than 5% of backend http requests returned 5xx responses during the last 5 minutes"
+          
+          - alert: HighHTTPLatency
+            expr: |
+                histogram_quantile(
+                  0.95,
+                  sum by (le)(
+                    rate(http_request_duration_highr_seconds_bucket{
+                      namespace="devbug",
+                      pod=~"backend-.*"
+                    }[5m])
+                  )
+                ) > 1
+            for: 5m
+            labels:
+              severity: warning
+              category: service
+            annotations:
+              summary: "High http llatency"
+              description: "95th percentile of backend HTTP response time exceeds 1 second during the last 5 minutes"
+      - name: devbug_runtime_alerts
+        interval: 30s
+        rules:
+          - alert: HighPythonMemoryUsage
+            expr: |
+              max by (pod) (
+                process_resident_memory_bytes{
+                  namespace="devbug",
+                  pod=~"backend-.*"
+                }
+              ) > 314572800
+            for: 5m
+            labels:
+              severity: warning
+              category: runtime
+            annotations:
+              summary: "High python memory usage"
+              description: "Python process memory usage exceeds 300 Mib on pod {{ $labels.pod }}"
+          - alert: HighPythonCPUUsage
+            expr: |
+              max by (pod) (
+                rate(process_cpu_seconds_total{
+                  namespace="devbug",
+                  pod=~"backend-.*"
+                }[5m])
+              ) > 0.8
+            for: 5m
+            labels:
+              severity: warning
+              category: runtime
+            annotations:
+              summary: "High python CPU usage"
+              description: "Python process CPU usage exceeds 0.8 CPU cores on pod {{ $labels.pod }}"
