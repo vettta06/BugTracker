@@ -236,6 +236,11 @@ curl http://localhost:8001/metrics
 
 ```bash
 minikube service grafana -n devbug
+```
+
+### Алерты
+
+Для отслеживания проблем в работе приложения настроены алерты на основе правил `vmalert`. При обнаружении превышения заданных порогов уведомления передаются через Alertmanager в Telegram. Настроены проверки высокого процента HTTP-ошибок, увеличения времени ответа API, повышенного потребления памяти и загрузки CPU. После устранения проблемы Alertmanager также отправляет уведомление о восстановлении состояния.
 
 ## Структура проекта
 
@@ -308,4 +313,3 @@ devbug/
 ```
 
 **Стек:** FastAPI, HTML, CSS, JavaScript, PostgreSQL, SQLAlchemy, Alembic, Docker, Kubernetes, Minikube, VictoriaMetrics, vmagent, postgres_exporter, VictoriaLogs, Vector, Grafana.
-```
