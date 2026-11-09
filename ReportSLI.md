@@ -88,13 +88,13 @@ sum(rate(http_request_duration_seconds_count{namespace="devbug", pod=~"backend-.
 **Формула (1m):**
 
 ```promql
-avg_over_time(up{namespace="devbug", pod=~"backend-.*"}[1m])
+avg_over_time(up{namespace="devbug", pod=~"backend-.*"}[1m]) or vector(0)
 ```
 
 **Формула (30d):**
 
 ```promql
-avg_over_time(up{namespace="devbug", pod=~"backend-.*"}[30d])
+avg_over_time(up{namespace="devbug", pod=~"backend-.*"}[30d]) or vector(0)
 ```
 
 ### SLI-4. DB availability (TBSLO, supporting)

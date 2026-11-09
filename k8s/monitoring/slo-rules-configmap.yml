@@ -26,7 +26,7 @@ data:
           # SLI-3:
           - record: sli:backend_uptime:ratio_rate1m
             expr: |
-              avg_over_time(up{namespace="devbug", pod=~"backend-.*"}[1m])
+              avg_over_time(up{namespace="devbug", pod=~"backend-.*"}[1m]) or vector(0)
 
           # SLO-1:
           - record: slo:http_availability:ratio_30d
