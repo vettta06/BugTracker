@@ -33,3 +33,5 @@ resources:
   - monitoring/alertmanager-secret.yml
   - monitoring/alertmanager-deployment.yml
   - monitoring/alertmanager-service.yml
+  - gateway/gateway.yml
+  - gateway/gatewayclass.yml
