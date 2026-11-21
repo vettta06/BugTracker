@@ -1,6 +1,11 @@
 import uuid
 from contextlib import asynccontextmanager
 from time import perf_counter
+import os
+
+from app.database import engine
+from sqlalchemy import text
+from fastapi.responses import JSONResponse
 
 import structlog
 from app.logger import logger
@@ -9,6 +14,8 @@ from fastapi import FastAPI, Request
 from prometheus_client import start_http_server
 from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.middleware.base import BaseHTTPMiddleware
+
+APP_VERSION = os.getenv("APP_VERSION", "v1.0.0")
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
@@ -73,6 +80,29 @@ app.include_router(users.router)
 @app.get("/")
 def root():
     return {"service": "DevBug", "status": "ok"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "version": APP_VERSION}
+
+
+@app.get("/live")
+def live():
+    return {"status": "alive", "version": APP_VERSION}
+
+
+@app.get("/ready")
+def ready():
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except Exception:
+        return JSONResponse(
+            status_code=503, content={"status": "not_ready", "version": APP_VERSION}
+        )
+
+    return {"status": "ready", "version": APP_VERSION}
 
 
 Instrumentator().instrument(app)

@@ -1,0 +1,23 @@
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: devbug-shadow-route
+  namespace: devbug
+spec:
+  parentRefs:
+    - name: devbug-gateway
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestMirror
+          requestMirror:
+            backendRef:
+              name: backend-v2
+              port: 8000
+      backendRefs:
+        - name: backend
+          port: 8000
