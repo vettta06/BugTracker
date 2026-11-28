@@ -35,3 +35,6 @@ resources:
   - monitoring/alertmanager-service.yml
   - gateway/gateway.yml
   - gateway/gatewayclass.yml
+  - gateway/httproute-canary.yml
+  - app/backend-v2-deployment.yml
+  - app/backend-v2-service.yml
